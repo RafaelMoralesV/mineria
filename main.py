@@ -38,37 +38,30 @@ def op_time(row):
 
     return (arrival - alarm).total_seconds()
 
-def eval_business_impact(row):
-    business_impact = row['Business_Impact']
-    
-    if(business_impact == "May resume operations within a week"):
-        return 1
-    elif(business_impact == "May resume operations within a month"):
-        return 2
-    elif(business_impact == "May resume operations within a year"):
-        return 3
-    elif(business_impact == "May not resume operations"):
-        return 4
-    else:
-        return 0
-
-
-def eval_extent_of_fire(row):
-    extent: str = row['Extent_Of_Fire']
-    
-    if('Confined' in extent):
-        return 1
-    elif('Spread' in extent):
-        return 2
-    elif('Entire' in extent):
-        return 3
-    else:
+def evaluate_column(cell, hay, exact = True):
+    try:
+        if(exact):
+            return hay.index(cell) + 1
+        else:
+            for index, word in enumerate(hay):
+                if(word in cell):
+                    return index + 1
+    except:
         return 0
 
 
 data['Operation_time'] = data.apply(lambda x: op_time(x), axis=1)
-data['eval_bi'] = data.apply(lambda x: eval_business_impact(x), axis=1)
-data['eval_eof'] = data.apply(lambda x: eval_extent_of_fire(x), axis=1)
+data['eval_bi'] = data.apply(lambda x: evaluate_column(x['Business_Impact'], [
+            "May resume operations within a week",
+            "May resume operations within a month",
+            "May resume operations within a year",
+            "May not resume operations",
+        ]), axis=1)
+data['eval_eof'] = data.apply(lambda x: evaluate_column(x['Extent_Of_Fire'], [
+    'Confined',
+    'Spread',
+    'Entire',
+    ], exact=False), axis=1)
 
 
 from pandas_profiling import ProfileReport
